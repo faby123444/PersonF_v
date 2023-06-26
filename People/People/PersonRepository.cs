@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SQLite;
+using People.Models;
 
 namespace People
 {
@@ -12,12 +14,16 @@ namespace People
 
         public string StatusMessage { get; set; }
 
-        // TODO: Add variable for the SQLite connection
+		private SQLiteConnection conn;
 
-        private void Init()
+		private void Init()
         {
-            // TODO: Add code to initialize the repository         
-        }
+			if (conn != null)
+				return;
+
+			conn = new SQLiteConnection(_dbPath);
+			conn.CreateTable<Person>();
+		}
 
         public PersonRepository(string dbPath)
         {
@@ -29,16 +35,17 @@ namespace People
             int result = 0;
             try
             {
-                // TODO: Call Init()
+				// enter this line
+				Init();
 
-                // basic validation to ensure a name was entered
-                if (string.IsNullOrEmpty(name))
-                    throw new Exception("Valid name required");
+				// basic validation to ensure a name was entered
+				if (string.IsNullOrEmpty(name))
+					throw new Exception("Valid name required");
 
-                // TODO: Insert the new person into the database
-                result = 0;
+				// enter this line
+				result = conn.Insert(new Person { Name = name });
 
-                StatusMessage = string.Format("{0} record(s) added (Name: {1})", result, name);
+				StatusMessage = string.Format("{0} record(s) added (Name: {1})", result, name);
             }
             catch (Exception ex)
             {
@@ -52,8 +59,9 @@ namespace People
             // TODO: Init then retrieve a list of Person objects from the database into a list
             try
             {
-                
-            }
+				Init();
+				return conn.Table<Person>().ToList();
+			}
             catch (Exception ex)
             {
                 StatusMessage = string.Format("Failed to retrieve data. {0}", ex.Message);
